@@ -11,17 +11,18 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Blue Dashboard CSS
+# Custom Dark Blue Dashboard CSS
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
+        color: #F8FAFC;
     }
     
     .stApp {
-        background-color: #F1F5F9;
+        background-color: #0F172A;
     }
     
     .header-container {
@@ -31,21 +32,26 @@ st.markdown("""
         color: white;
         text-align: center;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
     
     .card {
-        background-color: white;
+        background-color: #1E293B;
         padding: 1.5rem;
         border-radius: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         margin-bottom: 1rem;
-        border-top: 5px solid #3B82F6;
+        border: 1px solid #334155;
+        color: #F8FAFC;
+    }
+    
+    h1, h2, h3, h4, p, label {
+        color: #F8FAFC !important;
     }
     
     .stButton>button {
         width: 100%;
-        background: #1E3A8A;
+        background: #3B82F6;
         color: white !important;
         border-radius: 10px;
         padding: 0.5rem;
@@ -55,17 +61,25 @@ st.markdown("""
     }
     
     .stButton>button:hover {
-        background: #3B82F6;
+        background: #60A5FA;
         transform: scale(1.02);
     }
     
+    .stNumberInput input, .stTextInput input {
+        background-color: #0F172A !important;
+        color: white !important;
+        border: 1px solid #334155 !important;
+    }
+    
     [data-testid="stSidebar"] {
-        background-color: #0F172A;
+        background-color: #020617;
         color: white;
     }
     
-    .metric-label { color: #64748B; font-size: 0.9rem; font-weight: 600; }
-    .metric-value { color: #1E3A8A; font-size: 1.5rem; font-weight: 700; }
+    .stTable {
+        background-color: #1E293B !important;
+        color: white !important;
+    }
     
     </style>
 """, unsafe_allow_html=True)
