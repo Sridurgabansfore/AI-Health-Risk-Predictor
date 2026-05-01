@@ -121,28 +121,27 @@ with st.sidebar:
 
 # Header
 st.markdown("""
-    <div class='header-container'>
-        <h1>🏥 AI Health Risk Dashboard</h1>
-        <p>Enterprise-grade diabetes prediction and patient analysis</p>
+    <div class='header-container' style='padding: 1rem; margin-bottom: 1rem;'>
+        <h2 style='margin:0;'>🏥 AI Health Dashboard</h2>
     </div>
 """, unsafe_allow_html=True)
 
 # Main Grid
-top_col1, top_col2 = st.columns([2, 1])
+top_col1, top_col2 = st.columns([1.5, 1])
 
 with top_col1:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("### 👤 Patient Information")
-    p_name = st.text_input("Name", "Guest")
+    st.markdown("#### 👤 Patient Details")
+    p_name = st.text_input("Name", "Guest", label_visibility="collapsed")
     
     c1, c2, c3, c4 = st.columns(4)
-    with c1: preg = st.number_input("Pregnancies", 0, 20, value=int(st.session_state["preg"]))
-    with c2: glucose = st.number_input("Glucose", 0, 200, value=int(st.session_state["glucose"]))
+    with c1: preg = st.number_input("Preg", 0, 20, value=int(st.session_state["preg"]))
+    with c2: glucose = st.number_input("Gluc", 0, 200, value=int(st.session_state["glucose"]))
     with c3: bp = st.number_input("BP", 0, 150, value=int(st.session_state["bp"]))
     with c4: skin = st.number_input("Skin", 0, 100, value=int(st.session_state["skin"]))
     
     c1, c2, c3, c4 = st.columns(4)
-    with c1: insulin = st.number_input("Insulin", 0, 900, value=int(st.session_state["insulin"]))
+    with c1: insulin = st.number_input("Ins", 0, 900, value=int(st.session_state["insulin"]))
     with c2: bmi = st.number_input("BMI", 0.0, 50.0, value=float(st.session_state["bmi"]))
     with c3: dpf = st.number_input("DPF", 0.0, 3.0, value=float(st.session_state["dpf"]))
     with c4: age = st.number_input("Age", 1, 100, value=int(st.session_state["age"]))
@@ -158,18 +157,19 @@ with top_col1:
 
 with top_col2:
     st.markdown("<div class='card' style='height: 100%;'>", unsafe_allow_html=True)
-    st.markdown("### 🎤 Voice Input")
-    if voice_available:
-        if st.button("Listen Now"):
-            with st.spinner("..."): text = get_voice_input()
-            if "Could not" not in text:
-                m = extract_metrics(text)
-                for k, v in m.items(): st.session_state[k] = v
-                st.rerun()
-            else: st.warning("Try again")
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("### 📊 Metrics Overview")
-    st.bar_chart(pd.DataFrame({"Values": [glucose, bp, bmi]}, index=["Gluc", "BP", "BMI"]), color="#1E3A8A")
+    st.markdown("#### 📊 Insights & Voice")
+    v_col1, v_col2 = st.columns([1, 1])
+    with v_col1:
+        if voice_available:
+            if st.button("🎤 Listen"):
+                with st.spinner("..."): text = get_voice_input()
+                if "Could not" not in text:
+                    m = extract_metrics(text)
+                    for k, v in m.items(): st.session_state[k] = v
+                    st.rerun()
+    with v_col2: st.markdown("<p style='font-size:0.8rem; opacity:0.7;'>Click to speak symptoms</p>", unsafe_allow_html=True)
+    
+    st.bar_chart(pd.DataFrame({"Values": [glucose, bp, bmi]}, index=["Gluc", "BP", "BMI"]), color="#3B82F6", height=180)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Results Row
@@ -178,12 +178,12 @@ if 'last_result' in st.session_state:
     res = st.session_state['last_result']
     inp = st.session_state['last_input']
     
-    col_a, col_b = st.columns([1, 2])
+    col_a, col_b = st.columns([1, 3])
     with col_a:
-        if res == 1: st.error("## ⚠️ HIGH RISK")
-        else: st.success("## ✅ LOW RISK")
+        if res == 1: st.error("### ⚠️ HIGH RISK")
+        else: st.success("### ✅ LOW RISK")
     with col_b:
-        st.markdown("#### 📋 AI Summary Report")
+        st.markdown("<p style='font-weight:600; margin-bottom:0;'>📋 AI Health Summary</p>", unsafe_allow_html=True)
         st.write(generate_health_report(inp, res))
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -192,7 +192,7 @@ if st.checkbox("Show Logs"):
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     try:
         df = pd.read_csv("history.csv", names=["Name", "Preg", "Gluc", "BP", "Skin", "Ins", "BMI", "DPF", "Age", "Res"])
-        st.table(df.tail(5))
+        st.table(df.tail(3))
     except: st.info("No logs")
     st.markdown("</div>", unsafe_allow_html=True)
 
