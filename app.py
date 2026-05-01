@@ -6,85 +6,67 @@ from model import predict_risk
 
 # --- UI CONFIGURATION ---
 st.set_page_config(
-    page_title="AI Medical Assistant",
-    page_icon="🩺",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="AI Health Dashboard",
+    page_icon="🏥",
+    layout="wide"
 )
 
-# Custom Warm CSS
+# Custom Blue Dashboard CSS
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Outfit', sans-serif;
-        color: #1E293B;
+        font-family: 'Inter', sans-serif;
     }
     
     .stApp {
-        background: linear-gradient(135deg, #FFFBF5 0%, #F8FAFC 100%);
+        background-color: #F1F5F9;
     }
     
-    .main-header {
-        background: linear-gradient(90deg, #FF8000 0%, #FFB266 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 700;
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .sub-header {
-        color: #64748B;
-        font-size: 1.2rem;
+    .header-container {
+        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        padding: 2rem;
+        border-radius: 0 0 30px 30px;
+        color: white;
+        text-align: center;
         margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2);
+    }
+    
+    .card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        border-top: 5px solid #3B82F6;
     }
     
     .stButton>button {
-        background: linear-gradient(90deg, #FF8000 0%, #FFB266 100%);
+        width: 100%;
+        background: #1E3A8A;
         color: white !important;
+        border-radius: 10px;
+        padding: 0.5rem;
+        font-weight: 700;
         border: none;
-        padding: 0.6rem 2rem;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(255, 128, 0, 0.2);
+        transition: 0.3s;
     }
     
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 128, 0, 0.3);
-    }
-    
-    .stNumberInput, .stTextInput {
-        background-color: white;
-        border-radius: 12px;
-        border: 1px solid #E2E8F0;
-    }
-    
-    .report-card {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 20px;
-        border-left: 8px solid #FF8000;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        background: #3B82F6;
+        transform: scale(1.02);
     }
     
     [data-testid="stSidebar"] {
-        background-color: #1E293B;
+        background-color: #0F172A;
+        color: white;
     }
     
-    [data-testid="stSidebar"] * {
-        color: white !important;
-    }
+    .metric-label { color: #64748B; font-size: 0.9rem; font-weight: 600; }
+    .metric-value { color: #1E3A8A; font-size: 1.5rem; font-weight: 700; }
     
-    .stMetric {
-        background-color: white;
-        padding: 1rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -94,11 +76,11 @@ try:
     voice_available = True
 except (ModuleNotFoundError, ImportError):
     voice_available = False
-    def get_voice_input(): return "Voice assistant module not available."
-    def summarize_text(text): return "Summarizer module not available."
-    def generate_health_report(input_data, result): return "Report generator not available."
+    def get_voice_input(): return "Voice assistant unavailable."
+    def summarize_text(text): return "Summarizer unavailable."
+    def generate_health_report(input_data, result): return "Report unavailable."
     def extract_metrics(text): return {}
-    def chatbot_response(query): return "Chatbot module not available."
+    def chatbot_response(query): return "Chatbot unavailable."
 
 def save_data(name, input_data, result):
     with open("history.csv", "a", newline="") as file:
@@ -108,103 +90,95 @@ def save_data(name, input_data, result):
 # Initialize session state
 if "messages" not in st.session_state: st.session_state.messages = []
 if "age" not in st.session_state: st.session_state["age"] = 1
-for field in ["preg", "glucose", "bp", "skin", "insulin", "bmi", "dpf"]:
-    if field not in st.session_state: st.session_state[field] = 0.0 if field in ["bmi", "dpf"] else 0
+for f in ["preg", "glucose", "bp", "skin", "insulin", "bmi", "dpf"]:
+    if f not in st.session_state: st.session_state[f] = 0.0 if f in ["bmi", "dpf"] else 0
 
-# --- SIDEBAR CHATBOT ---
+# Sidebar Chatbot
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/387/387561.png", width=100)
-    st.markdown("<h2 style='color:white;'>Medical AI</h2>", unsafe_allow_html=True)
-    st.markdown("<hr style='border: 1px solid #334155;'>", unsafe_allow_html=True)
-    
-    # Display chat history
+    st.markdown("### 💬 Medical Assistant")
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    if prompt := st.chat_input("Ask a medical question..."):
+        with st.chat_message(message["role"]): st.markdown(message["content"])
+    if prompt := st.chat_input("Ask me anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"): st.markdown(prompt)
-        response = chatbot_response(prompt)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        with st.chat_message("assistant"): st.markdown(response)
+        res = chatbot_response(prompt)
+        st.session_state.messages.append({"role": "assistant", "content": res})
+        with st.chat_message("assistant"): st.markdown(res)
 
-# --- MAIN APP UI ---
-st.markdown("<h1 class='main-header'>🩺 AI Medical Assistant</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-header'>Predict diabetes risk and get AI-powered health insights in seconds.</p>", unsafe_allow_html=True)
+# Header
+st.markdown("""
+    <div class='header-container'>
+        <h1>🏥 AI Health Risk Dashboard</h1>
+        <p>Enterprise-grade diabetes prediction and patient analysis</p>
+    </div>
+""", unsafe_allow_html=True)
 
-patient_name = st.text_input("👤 Patient Name", "Guest")
+# Main Grid
+top_col1, top_col2 = st.columns([2, 1])
 
-col1, col2 = st.columns(2)
-
-with col1:
-    preg = st.number_input("Pregnancies", 0, 20, value=int(st.session_state["preg"]))
-    bp = st.number_input("Blood Pressure (mmHg)", 0, 150, value=int(st.session_state["bp"]))
-    insulin = st.number_input("Insulin (mu U/ml)", 0, 900, value=int(st.session_state["insulin"]))
-    dpf = st.number_input("Diabetes Pedigree Function", 0.0, 3.0, value=float(st.session_state["dpf"]))
-
-with col2:
-    glucose = st.number_input("Glucose (mg/dL)", 0, 200, value=int(st.session_state["glucose"]))
-    skin = st.number_input("Skin Thickness (mm)", 0, 100, value=int(st.session_state["skin"]))
-    bmi = st.number_input("BMI (Weight/Height²)", 0.0, 50.0, value=float(st.session_state["bmi"]))
-    age = st.number_input("Age (Years)", 1, 100, value=int(st.session_state["age"]))
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# Visual Impact
-data = {"Feature": ["Glucose", "BP", "BMI"], "Values": [glucose, bp, bmi]}
-df_chart = pd.DataFrame(data)
-st.bar_chart(df_chart.set_index("Feature"), color="#FF8000")
-
-st.markdown("<hr>", unsafe_allow_html=True)
-
-# Voice Assistant Section
-st.markdown("### 🎤 Voice Assistant")
-if voice_available:
-    if st.button("Start Listening"):
-        with st.spinner("AI is listening..."):
-            text = get_voice_input()
-        if "Could not" not in text:
-            summary = summarize_text(text)
-            metrics = extract_metrics(text)
-            for field, val in metrics.items(): st.session_state[field] = val
-            if metrics:
-                st.toast(f"Data Extracted: {', '.join(metrics.keys())} ✅")
-                st.rerun()
-            st.write("🗣️ Transcription:", text)
-            st.info(f"🧾 Summary: {summary}")
-        else:
-            st.error(f"❌ {text}")
-else:
-    st.info("Voice assistant modules are not available.")
-
-st.markdown("<hr>", unsafe_allow_html=True)
-
-# Prediction Section
-if st.button("✨ Predict Health Risk", use_container_width=True):
-    input_data = [preg, glucose, bp, skin, insulin, bmi, dpf, age]
-    result = predict_risk(input_data)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if result == 1:
-        st.error("### ⚠️ High Diabetes Risk Detected")
-    else:
-        st.success("### ✅ Low Diabetes Risk Detected")
+with top_col1:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("### 👤 Patient Information")
+    p_name = st.text_input("Name", "Guest")
     
-    save_data(patient_name, input_data, result)
-
-    st.markdown("<div class='report-card'>", unsafe_allow_html=True)
-    st.subheader("📋 AI Health Report Summary")
-    with st.spinner("Analyzing..."):
-        report = generate_health_report(input_data, result)
-    st.write(report)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: preg = st.number_input("Pregnancies", 0, 20, value=int(st.session_state["preg"]))
+    with c2: glucose = st.number_input("Glucose", 0, 200, value=int(st.session_state["glucose"]))
+    with c3: bp = st.number_input("BP", 0, 150, value=int(st.session_state["bp"]))
+    with c4: skin = st.number_input("Skin", 0, 100, value=int(st.session_state["skin"]))
+    
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: insulin = st.number_input("Insulin", 0, 900, value=int(st.session_state["insulin"]))
+    with c2: bmi = st.number_input("BMI", 0.0, 50.0, value=float(st.session_state["bmi"]))
+    with c3: dpf = st.number_input("DPF", 0.0, 3.0, value=float(st.session_state["dpf"]))
+    with c4: age = st.number_input("Age", 1, 100, value=int(st.session_state["age"]))
+    
+    if st.button("🚀 Analyze Patient Risk"):
+        input_data = [preg, glucose, bp, skin, insulin, bmi, dpf, age]
+        res = predict_risk(input_data)
+        save_data(p_name, input_data, res)
+        st.session_state['last_result'] = res
+        st.session_state['last_input'] = input_data
+        st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("<br><hr>", unsafe_allow_html=True)
-st.subheader("💾 Past Patient History")
-if st.checkbox("Show History Logs"):
+with top_col2:
+    st.markdown("<div class='card' style='height: 100%;'>", unsafe_allow_html=True)
+    st.markdown("### 🎤 Voice Input")
+    if voice_available:
+        if st.button("Listen Now"):
+            with st.spinner("..."): text = get_voice_input()
+            if "Could not" not in text:
+                m = extract_metrics(text)
+                for k, v in m.items(): st.session_state[k] = v
+                st.rerun()
+            else: st.warning("Try again")
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("### 📊 Metrics Overview")
+    st.bar_chart(pd.DataFrame({"Values": [glucose, bp, bmi]}, index=["Gluc", "BP", "BMI"]), color="#1E3A8A")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Results Row
+if 'last_result' in st.session_state:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    res = st.session_state['last_result']
+    inp = st.session_state['last_input']
+    
+    col_a, col_b = st.columns([1, 2])
+    with col_a:
+        if res == 1: st.error("## ⚠️ HIGH RISK")
+        else: st.success("## ✅ LOW RISK")
+    with col_b:
+        st.markdown("#### 📋 AI Summary Report")
+        st.write(generate_health_report(inp, res))
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# History
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+if st.checkbox("Show Logs"):
     try:
-        df_history = pd.read_csv("history.csv", names=["Name", "Preg", "Glucose", "BP", "Skin", "Insulin", "BMI", "DPF", "Age", "Result"])
-        st.dataframe(df_history, use_container_width=True)
-    except:
-        st.info("No logs available.")
+        df = pd.read_csv("history.csv", names=["Name", "Preg", "Gluc", "BP", "Skin", "Ins", "BMI", "DPF", "Age", "Res"])
+        st.table(df.tail(5))
+    except: st.info("No logs")
+st.markdown("</div>", unsafe_allow_html=True)
+
