@@ -1,13 +1,15 @@
 try:
     from speech_to_text import get_voice_input
-    from summarizer import summarize_text
+    from summarizer import summarize_text, generate_health_report
     voice_available = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     voice_available = False
     def get_voice_input():
         return "Voice assistant module not available."
     def summarize_text(text):
         return "Summarizer module not available."
+    def generate_health_report(input_data, result):
+        return "Report generator not available."
 
 import streamlit as st
 import pandas as pd
@@ -70,3 +72,9 @@ if st.button("Predict Risk"):
         st.success("✅ Low Diabetes Risk")
     
     save_data(input_data, result)
+
+    # Display AI Report Summary
+    st.subheader("📋 AI Health Report Summary")
+    with st.spinner("Analyzing data for summary..."):
+        report = generate_health_report(input_data, result)
+    st.info(report)
