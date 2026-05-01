@@ -1,6 +1,6 @@
 try:
     from speech_to_text import get_voice_input
-    from summarizer import summarize_text, generate_health_report, extract_metrics
+    from summarizer import summarize_text, generate_health_report, extract_metrics, chatbot_response
     voice_available = True
 except (ModuleNotFoundError, ImportError):
     voice_available = False
@@ -12,26 +12,55 @@ except (ModuleNotFoundError, ImportError):
         return "Report generator not available."
     def extract_metrics(text):
         return {}
+    def chatbot_response(query):
+        return "Chatbot module not available."
 
 import streamlit as st
 import pandas as pd
 import csv
 from model import predict_risk
 
-def save_data(input_data, result):
+def save_data(name, input_data, result):
     with open("history.csv", "a", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(input_data + [result])
+        writer.writerow([name] + input_data + [result])
 
-# Initialize session state for form fields
+# Initialize session state for form fields and chat
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 if "age" not in st.session_state:
     st.session_state["age"] = 1
 for field in ["preg", "glucose", "bp", "skin", "insulin", "bmi", "dpf"]:
     if field not in st.session_state:
         st.session_state[field] = 0.0 if field in ["bmi", "dpf"] else 0
 
+# Sidebar Chatbot
+with st.sidebar:
+    st.header("💬 Medical AI Chatbot")
+    st.info("Ask me about diabetes, BMI, or health tips!")
+    
+    # Display chat history
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat input
+    if prompt := st.chat_input("Ask a medical question..."):
+        # Add user message to history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Generate and add assistant response
+        response = chatbot_response(prompt)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.chat_message("assistant"):
+            st.markdown(response)
+
 st.title("🩺 AI Medical Assistant")
 st.markdown("This app analyzes symptoms and predicts diabetes risk using AI.")
+
+patient_name = st.text_input("👤 Patient Name", "Guest")
 
 col1, col2 = st.columns(2)
 
@@ -90,15 +119,19 @@ if st.button("Predict Risk"):
     else:
         st.success("✅ Low Diabetes Risk")
     
-    save_data(input_data, result)
+    save_data(patient_name, input_data, result)
 
+    # Display AI Report Summary
+    st.subheader("📋 AI Health Report Summary")
+    with st.spinner("Analyzing data for summary..."):
+        report = generate_health_report(input_data, result)
     st.info(report)
 
 st.divider()
 st.subheader("💾 Past Patient History")
 if st.checkbox("Show History"):
     try:
-        df_history = pd.read_csv("history.csv", names=["Preg", "Glucose", "BP", "Skin", "Insulin", "BMI", "DPF", "Age", "Result"])
+        df_history = pd.read_csv("history.csv", names=["Name", "Preg", "Glucose", "BP", "Skin", "Insulin", "BMI", "DPF", "Age", "Result"])
         st.dataframe(df_history)
     except Exception as e:
         st.info("No history data available yet. Complete a prediction to start tracking!")
