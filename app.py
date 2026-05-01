@@ -188,11 +188,11 @@ if 'last_result' in st.session_state:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # History
-st.markdown("<div class='card'>", unsafe_allow_html=True)
 if st.checkbox("Show Logs"):
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
     try:
         df = pd.read_csv("history.csv", names=["Name", "Preg", "Gluc", "BP", "Skin", "Ins", "BMI", "DPF", "Age", "Res"])
         st.table(df.tail(5))
     except: st.info("No logs")
-st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
