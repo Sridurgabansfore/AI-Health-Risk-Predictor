@@ -92,8 +92,13 @@ if st.button("Predict Risk"):
     
     save_data(input_data, result)
 
-    # Display AI Report Summary
-    st.subheader("📋 AI Health Report Summary")
-    with st.spinner("Analyzing data for summary..."):
-        report = generate_health_report(input_data, result)
     st.info(report)
+
+st.divider()
+st.subheader("💾 Past Patient History")
+if st.checkbox("Show History"):
+    try:
+        df_history = pd.read_csv("history.csv", names=["Preg", "Glucose", "BP", "Skin", "Insulin", "BMI", "DPF", "Age", "Result"])
+        st.dataframe(df_history)
+    except Exception as e:
+        st.info("No history data available yet. Complete a prediction to start tracking!")
