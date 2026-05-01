@@ -212,4 +212,30 @@ with tab2:
         
     except: st.info("No history logs found yet.")
     st.markdown("</div>", unsafe_allow_html=True)
+
+    # --- SINGLE PATIENT ANALYTICS ---
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("### 📊 Individual Patient Analysis")
+    try:
+        df = pd.read_csv("history.csv", names=["Name", "Preg", "Gluc", "BP", "Skin", "Ins", "BMI", "DPF", "Age", "Res"])
+        unique_patients = df['Name'].unique()
+        selected_p = st.selectbox("Select Patient to Analyze", unique_patients)
+        
+        if selected_p:
+            p_data = df[df['Name'] == selected_p].iloc[-1] # Get latest entry for this name
+            
+            st.markdown(f"#### Profile: {selected_p}")
+            # Display metrics as a bar chart
+            metrics_df = pd.DataFrame({
+                "Metric": ["Glucose", "BP", "Insulin", "BMI", "Age"],
+                "Value": [p_data['Gluc'], p_data['BP'], p_data['Ins'], p_data['BMI'], p_data['Age']]
+            })
+            st.bar_chart(metrics_df.set_index("Metric"), color="#60A5FA")
+            
+            # Show Risk Status
+            if p_data['Res'] == 1: st.error("Current Status: High Risk Detected")
+            else: st.success("Current Status: Low Risk Detected")
+    except:
+        st.info("Start predicting to see individual analysis.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
