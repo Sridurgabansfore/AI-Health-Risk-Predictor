@@ -109,6 +109,11 @@ for f in ["preg", "glucose", "bp", "skin", "insulin", "bmi", "dpf"]:
 
 # Sidebar Chatbot
 with st.sidebar:
+    # Icons Row
+    col_icon1, col_icon2 = st.columns(2)
+    with col_icon1: st.image("https://cdn-icons-png.flaticon.com/512/3774/3774299.png", width=80) # Doctor
+    with col_icon2: st.image("https://cdn-icons-png.flaticon.com/512/3063/3063205.png", width=80) # Hospital
+    
     st.markdown("### 💬 Medical Assistant")
     for message in st.session_state.messages:
         with st.chat_message(message["role"]): st.markdown(message["content"])
